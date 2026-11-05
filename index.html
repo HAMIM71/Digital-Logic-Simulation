@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Digital Logic Trainer</title>
+<style>
+*{box-sizing:border-box}
+:root{--bg:#0e1012;--panel:#15181c;--line:#262b31;--ink:#ecebe6;--dim:#9aa0a8;--red:#dd4743;--green:#46ff8b;--blue:#6cb6ff}
+html{background:var(--bg)}
+html,body{overflow-x:hidden}
+body{margin:0;color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1200px 500px at 50% -80px,#1d2127,var(--bg))}
+.top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding:10px 14px;background:rgba(14,16,18,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand b{display:block;font-size:16px;letter-spacing:.2px;line-height:1.1}
+.brand small{color:var(--dim);font-size:11.5px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--red);display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.logo i{border-radius:50%;background:#111}
+.logo i:last-child{background:var(--green);box-shadow:0 0 6px var(--green)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;flex:1}
+.cell{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+.lbl{color:var(--dim);font-size:11.5px;margin-right:2px}
+.swatches{display:flex;gap:5px;flex-wrap:wrap}
+#icSel{max-width:210px;text-overflow:ellipsis}
+button,select{font:inherit;color:inherit;background:#20252b;border:1px solid #333a42;border-radius:7px;padding:6px 10px;cursor:pointer;transition:background .12s,border-color .12s}
+button:hover,select:hover{background:#2a3037;border-color:#444d57}
+button:active{transform:translateY(1px)}
+button:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+button.go{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+button.go:hover{background:#ea5c57}
+button.danger:hover{border-color:#a83a36;color:#ffb3af}
+.col{width:22px;height:22px;border-radius:50%;border:2px solid #4a5058;padding:0}
+.col.on{border-color:#fff;box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--blue)}
+.col.auto{background:conic-gradient(#d33 0 25%,#2f6fe0 0 50%,#2fb55a 0 75%,#e0b92f 0)}
+#hint{display:flex;align-items:center;gap:10px;margin:12px 14px 0;padding:9px 14px;min-height:40px;color:#d3d6da;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+#hint:before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+#stage{overflow:auto;padding:14px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior:contain}
+#svg{display:block;margin:0 auto;border-radius:16px;box-shadow:0 22px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04)}
+svg text{user-select:none;-webkit-user-select:none;pointer-events:none}
+.hole-hit{fill:transparent}
+.hole-hit:hover{fill:rgba(40,130,255,.4)}
+.jack circle:first-child{transition:stroke .1s}
+.jack:hover circle:first-child{stroke:#fff}
+.led{fill:#10281a;stroke:#3a4a40;stroke-width:1.5;transition:fill .08s}
+.led.on{fill:#46ff8b;stroke:#b8ffd4;filter:drop-shadow(0 0 5px #46ff8b)}
+.ic{cursor:grab}
+.ic.sel .body{stroke:#6cb6ff;stroke-width:2.5}
+.tg,.pw-sw,.pbtn{cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:4px 14px 14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}
+.card h3:before{content:"";width:4px;height:15px;border-radius:2px;background:var(--red)}
+.card p{margin:0 0 8px;color:#a8acb3;font-size:13px}
+.dip{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px;font:12px ui-monospace,Menlo,Consolas,monospace}
+.pin{display:flex;align-items:center;gap:6px;background:#1b1f24;border-radius:5px;padding:3px 7px}
+.pin.r{flex-direction:row-reverse}
+.pin b{color:#8d939b;font-weight:600;min-width:18px;text-align:center}
+.pin i{margin-left:auto;font-style:normal;padding:0 5px;border-radius:3px;min-width:22px;text-align:center}
+.pin.r i{margin-left:0;margin-right:auto}
+.hi{background:#1f7a43;color:#d8ffe7}.lo{background:#3a3f46;color:#e3e5e8}.fl{color:#6b7078}
+.msg{display:flex;gap:8px;margin:0 0 6px;font-size:13px}
+.msg:before{content:"";flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px}
+.msg.err:before{background:#ff5b52}.msg.warn:before{background:#f2b632}.msg.ok:before{background:var(--green)}
+details{margin-top:6px;color:#a8acb3;font-size:13px}
+summary{cursor:pointer}
+.foot{padding:6px 14px 22px;text-align:center;color:#6f757d;font-size:12px}
+.foot b{color:#aeb3ba;font-weight:600}
+#loader{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .45s ease,visibility .45s}
+#loader.done{opacity:0;visibility:hidden}
+#loader .logo{width:64px;height:64px;border-radius:16px;padding:15px;gap:9px}
+#loader h1{margin:0;font-size:22px;font-weight:700}
+#loader p{margin:0;color:var(--dim);font-size:13px}
+.chase{display:flex;gap:9px}
+.chase i{width:12px;height:12px;border-radius:50%;background:#10281a;border:1.5px solid #3a4a40;animation:chase 1.2s infinite}
+@keyframes chase{0%,100%{background:#10281a;box-shadow:none}25%{background:var(--green);box-shadow:0 0 10px var(--green)}50%{background:#10281a;box-shadow:none}}
+.bar{width:220px;height:4px;border-radius:2px;background:#20252b;overflow:hidden}
+.bar span{display:block;height:100%;width:0;background:var(--red);transition:width .3s ease}
+#loader .by{position:absolute;bottom:22px;font-size:12px;color:#6f757d}
+#loader .by b{color:#aeb3ba;font-weight:600}
+@media (max-width:900px){
+.top{padding:8px 10px;gap:8px}
+.tools{flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.cell{flex:none}
+.brand small{display:none}
+#hint{margin:8px 10px 0;font-size:13px}
+#stage{height:66vh;height:66dvh;padding:8px;margin:8px 0}
+.panels{padding:4px 10px 12px}
+}
+@media (prefers-reduced-motion:reduce){.chase i{animation:none}#loader{transition:none}}
+</style>
+</head>
+<body>
+<div id="loader" role="status" aria-live="polite">
+  <span class="logo"><i></i><i></i></span>
+  <h1>Digital Logic Trainer</h1>
+  <div class="chase"><i></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.4s"></i><i style="animation-delay:.5s"></i><i style="animation-delay:.6s"></i><i style="animation-delay:.7s"></i></div>
+  <div class="bar"><span id="loadBar"></span></div>
+  <p id="loadTxt">Powering up the bench</p>
+  <div class="by">Developed by <b>Hamim</b></div>
+</div>
+<header class="top">
+  <div class="brand"><span class="logo"><i></i><i></i></span><div><b>Logic Trainer</b><small>Virtual digital lab bench</small></div></div>
+  <div class="tools">
+    <div class="cell"><span class="lbl">Part</span><select id="icSel" aria-label="IC type"></select><button id="addIc" class="go">Add IC</button></div>
+    <div class="cell"><span class="lbl">Wire</span><span id="colors" class="swatches"></span></div>
+    <div class="cell"><span class="lbl">Edit</span><button id="delSel" class="danger">Delete selected</button><button id="clearW" class="danger">Clear wires</button><button id="clearAll" class="danger">Clear all</button><button id="demo">Load demo</button></div>
+    <div class="cell"><span class="lbl">Clock</span>
+      <select id="clkSel" aria-label="Clock speed">
+        <option value="0">Off</option><option value="0.5">0.5 Hz</option><option value="1">1 Hz</option><option value="2">2 Hz</option><option value="5">5 Hz</option><option value="10">10 Hz</option><option value="50">50 Hz</option>
+      </select>
+    </div>
+    <div class="cell"><span class="lbl">View</span><button id="zOut" aria-label="Zoom out">−</button><button id="zIn" aria-label="Zoom in">+</button><button id="zFit">Fit</button></div>
+  </div>
+</header>
+<div id="hint"></div>
+<div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div class="panels">
+  <div class="card" id="info"></div>
+  <div class="card" id="diag"></div>
+</div>
+<footer class="foot">Developed by <b>Hamim</b></footer>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+const txt = (p, x, y, s, o = {}) => {
+  const t = el('text', {x, y, 'font-size': o.size || 10, fill: o.fill || '#e9e8e2', 'text-anchor': o.a || 'middle', 'font-weight': o.w || 500, 'font-family': o.f || 'system-ui,Segoe UI,sans-serif'}, p);
+  t.textContent = s;
+  return t;
+};
+
+const P = 16, N = 60, GRP = 6, X0 = 62, BY = 176, W = 1160, H = 680;
+const colX = c => X0 + c * P + Math.floor(c / 5) * GRP;
+const R = {a: BY + 64, b: BY + 80, c: BY + 96, d: BY + 112, e: BY + 128, f: BY + 162, g: BY + 178, h: BY + 194, i: BY + 210, j: BY + 226};
+const RL = {'T+': BY + 16, 'T-': BY + 32, 'B+': BY + 262, 'B-': BY + 278};
+const ROWS = 'abcdefghij';
+const pos = {};
+
+/* ---------- IC library ---------- */
+const TY = {};
+const sp = s => s.split(' ');
+const add = (id, cat, d) => { d.id = id; d.cat = cat; d.k = d.np / 2; TY[id] = d; };
+const AND = a => a.every(Boolean) ? 1 : 0, OR = a => a.some(Boolean) ? 1 : 0;
+const XOR = a => a.reduce((s, x) => s ^ x, 0), NOT = a => 1 - a[0], BUF = a => a[0];
+const NAND = a => 1 - AND(a), NOR = a => 1 - OR(a);
+
+function gate(desc, np, vcc, gnd, names, groups, fn) {
+  return {desc, np, vcc, gnd, names: sp(names), ins: groups.flatMap(g => g[0]), outs: groups.map(g => g[1]), init: () => ({}),
+    drive(ic, rd, wr) { for (const [i, o] of groups) wr(o, fn(i.map(rd))); }};
+}
+const Q2 = [[[1, 2], 3], [[4, 5], 6], [[9, 10], 8], [[12, 13], 11]];
+const N2 = [[[2, 3], 1], [[5, 6], 4], [[8, 9], 10], [[11, 12], 13]];
+const H6 = [[[1], 2], [[3], 4], [[5], 6], [[9], 8], [[11], 10], [[13], 12]];
+const T3 = [[[1, 2, 13], 12], [[3, 4, 5], 6], [[9, 10, 11], 8]];
+const F4 = [[[1, 2, 4, 5], 6], [[9, 10, 12, 13], 8]];
+const nm2 = '1A 1B 1Y 2A 2B 2Y GND 3Y 3A 3B 4Y 4A 4B VCC';
+const nm6 = '1A 1Y 2A 2Y 3A 3Y GND 4Y 4A 5Y 5A 6Y 6A VCC';
+const nm3 = '1A 1B 2A 2B 2C 2Y GND 3Y 3A 3B 3C 1Y 1C VCC';
+const nm4 = '1A 1B NC 1C 1D 1Y GND 2Y 2A 2B NC 2C 2D VCC';
+const G = 'Gates';
+add('7400', G, gate('Quad 2-input NAND', 14, 14, 7, nm2, Q2, NAND));
+add('7402', G, gate('Quad 2-input NOR', 14, 14, 7, '1Y 1A 1B 2Y 2A 2B GND 3A 3B 3Y 4A 4B 4Y VCC', N2, NOR));
+add('7404', G, gate('Hex inverter (NOT)', 14, 14, 7, nm6, H6, NOT));
+add('7407', G, gate('Hex buffer', 14, 14, 7, nm6, H6, BUF));
+add('7408', G, gate('Quad 2-input AND', 14, 14, 7, nm2, Q2, AND));
+add('7410', G, gate('Triple 3-input NAND', 14, 14, 7, nm3, T3, NAND));
+add('7411', G, gate('Triple 3-input AND', 14, 14, 7, nm3, T3, AND));
+add('7414', G, gate('Hex Schmitt-trigger inverter', 14, 14, 7, nm6, H6, NOT));
+add('7420', G, gate('Dual 4-input NAND', 14, 14, 7, nm4, F4, NAND));
+add('7421', G, gate('Dual 4-input AND', 14, 14, 7, nm4, F4, AND));
+add('7427', G, gate('Triple 3-input NOR', 14, 14, 7, nm3, T3, NOR));
+add('7430', G, gate('8-input NAND', 14, 14, 7, 'A B C D E F GND Y NC NC G H NC VCC', [[[1, 2, 3, 4, 5, 6, 11, 12], 8]], NAND));
+add('7432', G, gate('Quad 2-input OR', 14, 14, 7, nm2, Q2, OR));
+add('7486', G, gate('Quad 2-input XOR', 14, 14, 7, nm2, Q2, XOR));
+
+function ff(desc, np, vcc, gnd, names, pins, kind) {
+  const ins = [], outs = [];
+  pins.forEach(p => {
+    ins.push(p.clr, p.pre, p.clk, ...(kind === 'D' ? [p.d] : [p.j, p.k]));
+    outs.push(p.q, p.qn);
+  });
+  return {desc, np, vcc, gnd, names: sp(names), ins, outs, init: () => pins.map(() => ({q: 0, qn: 1, p: null})),
+    seq(ic, rd) {
+      pins.forEach((p, i) => {
+        const s = ic.s[i], clk = rd(p.clk), clr = rd(p.clr) === 0, pre = rd(p.pre) === 0;
+        if (s.p === null) s.p = clk;
+        const edge = kind === 'D' ? (s.p === 0 && clk === 1) : (s.p === 1 && clk === 0);
+        if (clr && pre) { s.q = 1; s.qn = 1; }
+        else if (clr) { s.q = 0; s.qn = 1; }
+        else if (pre) { s.q = 1; s.qn = 0; }
+        else if (edge) {
+          if (kind === 'D') { s.q = rd(p.d); }
+          else {
+            const j = rd(p.j), k = rd(p.k);
+            if (j && k) s.q = 1 - s.q; else if (j) s.q = 1; else if (k) s.q = 0;
+          }
+          s.qn = 1 - s.q;
+        } else s.qn = 1 - s.q;
+        s.p = clk;
+      });
+    },
+    drive(ic, rd, wr) { pins.forEach((p, i) => { wr(p.q, ic.s[i].q); wr(p.qn, ic.s[i].qn); }); }};
+}
+const FF = 'Flip-flops';
+add('7474', FF, ff('Dual D flip-flop, rising edge, active-low preset and clear', 14, 14, 7,
+  "1CLR' 1D 1CLK 1PRE' 1Q 1Q' GND 2Q' 2Q 2PRE' 2CLK 2D 2CLR' VCC",
+  [{clr: 1, d: 2, clk: 3, pre: 4, q: 5, qn: 6}, {clr: 13, d: 12, clk: 11, pre: 10, q: 9, qn: 8}], 'D'));
+add('7476', FF, ff('Dual JK flip-flop, falling edge, active-low preset and clear', 16, 5, 13,
+  "1CLK 1PRE' 1CLR' 1J VCC 2CLK 2PRE' 2CLR' 2J 2Q' 2Q 2K GND 1K 1Q' 1Q",
+  [{clk: 1, pre: 2, clr: 3, j: 4, k: 14, q: 16, qn: 15}, {clk: 6, pre: 7, clr: 8, j: 9, k: 12, q: 11, qn: 10}], 'JK'));
+add('74112', FF, ff('Dual JK flip-flop, falling edge, active-low preset and clear', 16, 16, 8,
+  "1CLK 1K 1J 1PRE' 1Q 1Q' 2Q' GND 2Q 2PRE' 2J 2K 2CLK 2CLR' 1CLR' VCC",
+  [{clk: 1, k: 2, j: 3, pre: 4, q: 5, qn: 6, clr: 15}, {clk: 13, k: 12, j: 11, pre: 10, q: 9, qn: 7, clr: 14}], 'JK'));
+
+const CR = 'Counters and registers';
+function ripple(desc, mod) {
+  return {desc, np: 14, vcc: 5, gnd: 10, names: sp('CKB R0(1) R0(2) NC VCC ' + (mod === 5 ? 'R9(1) R9(2)' : 'NC NC') + ' QC QB GND QD QA NC CKA'),
+    ins: mod === 5 ? [14, 1, 2, 3, 6, 7] : [14, 1, 2, 3], outs: [12, 9, 8, 11], init: () => ({a: 0, b: 0, pa: null, pb: null}),
+    seq(ic, rd) {
+      const s = ic.s, ca = rd(14), cb = rd(1);
+      if (s.pa === null) { s.pa = ca; s.pb = cb; }
+      const r0 = rd(2) && rd(3), r9 = mod === 5 && rd(6) && rd(7);
+      if (r9) { s.a = 1; s.b = 4; }
+      else if (r0) { s.a = 0; s.b = 0; }
+      else {
+        if (s.pa === 1 && ca === 0) s.a ^= 1;
+        if (s.pb === 1 && cb === 0) s.b = (s.b + 1) % mod;
+      }
+      s.pa = ca; s.pb = cb;
+    },
+    drive(ic, rd, wr) { const s = ic.s; wr(12, s.a); wr(9, s.b & 1); wr(8, (s.b >> 1) & 1); wr(11, (s.b >> 2) & 1); }};
+}
+add('7490', CR, ripple('Decade counter. Wire QA to CKB for BCD count 0 to 9', 5));
+add('7493', CR, ripple('4-bit binary counter. Wire QA to CKB for count 0 to 15', 8));
+function sync(desc, isSync) {
+  return {desc, np: 16, vcc: 16, gnd: 8, names: sp("CLR' CLK A B C D ENP GND LOAD' ENT QD QC QB QA RCO VCC"),
+    ins: [1, 2, 3, 4, 5, 6, 7, 9, 10], outs: [14, 13, 12, 11, 15], init: () => ({q: 0, p: null}),
+    seq(ic, rd) {
+      const s = ic.s, clk = rd(2), clr = rd(1) === 0;
+      if (s.p === null) s.p = clk;
+      if (!isSync && clr) s.q = 0;
+      else if (s.p === 0 && clk === 1) {
+        if (isSync && clr) s.q = 0;
+        else if (rd(9) === 0) s.q = rd(3) | rd(4) << 1 | rd(5) << 2 | rd(6) << 3;
+        else if (rd(7) && rd(10)) s.q = (s.q + 1) & 15;
+      }
+      s.p = clk;
+    },
+    drive(ic, rd, wr) { const q = ic.s.q; wr(14, q & 1); wr(13, (q >> 1) & 1); wr(12, (q >> 2) & 1); wr(11, (q >> 3) & 1); wr(15, rd(10) && q === 15 ? 1 : 0); }};
+}
+add('74161', CR, sync('4-bit synchronous counter, asynchronous clear', false));
+add('74163', CR, sync('4-bit synchronous counter, synchronous clear', true));
+add('74194', CR, {desc: '4-bit universal shift register. S1 S0: 00 hold, 01 shift right, 10 shift left, 11 load',
+  np: 16, vcc: 16, gnd: 8, names: sp("CLR' SR A B C D SL GND S1 S0 CLK QD QC QB QA VCC"), ins: [1, 2, 3, 4, 5, 6, 7, 9, 10, 11], outs: [15, 14, 13, 12],
+  init: () => ({q: [0, 0, 0, 0], p: null}),
+  seq(ic, rd) {
+    const s = ic.s, clk = rd(11);
+    if (s.p === null) s.p = clk;
+    if (rd(1) === 0) s.q = [0, 0, 0, 0];
+    else if (s.p === 0 && clk === 1) {
+      const m = rd(9) * 2 + rd(10), q = s.q;
+      if (m === 1) s.q = [rd(2), q[0], q[1], q[2]];
+      else if (m === 2) s.q = [q[1], q[2], q[3], rd(7)];
+      else if (m === 3) s.q = [rd(3), rd(4), rd(5), rd(6)];
+    }
+    s.p = clk;
+  },
+  drive(ic, rd, wr) { const q = ic.s.q; wr(15, q[0]); wr(14, q[1]); wr(13, q[2]); wr(12, q[3]); }});
+
+const DM = 'Decoders and multiplexers';
+const SEG7 = ['1111110', '0110000', '1101101', '1111001', '0110011', '1011011', '1011111', '1110000', '1111111', '1111011', '0001101', '0011001', '0100011', '1001011', '0001111', '0000000'];
+const segPins = [13, 12, 11, 10, 9, 15, 14];
+function bcd7(desc, activeHigh) {
+  return {desc, np: 16, vcc: 16, gnd: 8, names: sp("B C LT' BI' RBI' D A GND e d c b a g f VCC"), ins: [1, 2, 3, 4, 5, 6, 7], outs: segPins, init: () => ({}),
+    drive(ic, rd, wr) {
+      const v = rd(7) + rd(1) * 2 + rd(2) * 4 + rd(6) * 8;
+      let on = SEG7[v].split('').map(Number);
+      if (!rd(4)) on = on.map(() => 0);
+      else if (!rd(3)) on = on.map(() => 1);
+      else if (v === 0 && !rd(5)) on = on.map(() => 0);
+      segPins.forEach((p, i) => wr(p, activeHigh ? on[i] : 1 - on[i]));
+    }};
+}
+add('7447', DM, bcd7('BCD to 7-segment decoder, active-low outputs (use with common-anode display)', false));
+add('7448', DM, bcd7('BCD to 7-segment decoder, active-high outputs (use with common-cathode display)', true));
+const Y138 = [15, 14, 13, 12, 11, 10, 9, 7];
+add('74138', DM, {desc: '3-to-8 decoder, active-low outputs. Enabled when G1 is high and G2A, G2B are low', np: 16, vcc: 16, gnd: 8,
+  names: sp("A B C G2A' G2B' G1 Y7' GND Y6' Y5' Y4' Y3' Y2' Y1' Y0' VCC"), ins: [1, 2, 3, 4, 5, 6], outs: Y138, init: () => ({}),
+  drive(ic, rd, wr) {
+    const on = rd(6) && !rd(4) && !rd(5), n = rd(1) + rd(2) * 2 + rd(3) * 4;
+    Y138.forEach((p, i) => wr(p, on && n === i ? 0 : 1));
+  }});
+const D139 = [{g: 1, a: 2, b: 3, y: [4, 5, 6, 7]}, {g: 15, a: 14, b: 13, y: [12, 11, 10, 9]}];
+add('74139', DM, {desc: 'Dual 2-to-4 decoder, active-low outputs and enable', np: 16, vcc: 16, gnd: 8,
+  names: sp("1G' 1A 1B 1Y0' 1Y1' 1Y2' 1Y3' GND 2Y3' 2Y2' 2Y1' 2Y0' 2B 2A 2G' VCC"), ins: [1, 2, 3, 15, 14, 13], outs: [4, 5, 6, 7, 12, 11, 10, 9], init: () => ({}),
+  drive(ic, rd, wr) {
+    D139.forEach(d => { const n = rd(d.a) + rd(d.b) * 2, on = rd(d.g) === 0; d.y.forEach((p, i) => wr(p, on && n === i ? 0 : 1)); });
+  }});
+const D151 = [4, 3, 2, 1, 15, 14, 13, 12];
+add('74151', DM, {desc: '8-to-1 multiplexer with active-low strobe. Y is the output, W is its inverse', np: 16, vcc: 16, gnd: 8,
+  names: sp("D3 D2 D1 D0 Y W G' GND C B A D7 D6 D5 D4 VCC"), ins: [...D151, 11, 10, 9, 7], outs: [5, 6], init: () => ({}),
+  drive(ic, rd, wr) {
+    const n = rd(11) + rd(10) * 2 + rd(9) * 4, y = rd(7) ? 0 : rd(D151[n]);
+    wr(5, y); wr(6, 1 - y);
+  }});
+const M153 = [{g: 1, c: [6, 5, 4, 3], y: 7}, {g: 15, c: [10, 11, 12, 13], y: 9}];
+add('74153', DM, {desc: 'Dual 4-to-1 multiplexer. A and B select the input for both halves', np: 16, vcc: 16, gnd: 8,
+  names: sp("1G' B 1C3 1C2 1C1 1C0 1Y GND 2Y 2C0 2C1 2C2 2C3 A 2G' VCC"), ins: [1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15], outs: [7, 9], init: () => ({}),
+  drive(ic, rd, wr) { const n = rd(14) + rd(2) * 2; M153.forEach(m => wr(m.y, rd(m.g) ? 0 : rd(m.c[n]))); }});
+const M157 = [[2, 3, 4], [5, 6, 7], [11, 10, 9], [14, 13, 12]];
+add('74157', DM, {desc: 'Quad 2-to-1 multiplexer. S low selects A inputs, S high selects B inputs', np: 16, vcc: 16, gnd: 8,
+  names: sp("S 1A 1B 1Y 2A 2B 2Y GND 3Y 3B 3A 4Y 4B 4A G' VCC"), ins: [1, 15, 2, 3, 5, 6, 11, 10, 14, 13], outs: [4, 7, 9, 12], init: () => ({}),
+  drive(ic, rd, wr) { M157.forEach(([a, b, y]) => wr(y, rd(15) ? 0 : rd(1) ? rd(b) : rd(a))); }});
+
+const AR = 'Arithmetic';
+const A83 = [10, 8, 3, 1], B83 = [11, 7, 4, 16], S83 = [9, 6, 2, 15];
+add('7483', AR, {desc: '4-bit full adder with carry in (C0) and carry out (C4)', np: 16, vcc: 5, gnd: 12,
+  names: sp('A4 S3 A3 B3 VCC S2 B2 A2 S1 A1 B1 GND C0 C4 S4 B4'), ins: [...A83, ...B83, 13], outs: [...S83, 14], init: () => ({}),
+  drive(ic, rd, wr) {
+    let a = 0, b = 0;
+    A83.forEach((p, i) => a |= rd(p) << i);
+    B83.forEach((p, i) => b |= rd(p) << i);
+    const s = a + b + rd(13);
+    S83.forEach((p, i) => wr(p, (s >> i) & 1));
+    wr(14, (s >> 4) & 1);
+  }});
+const A85 = [10, 12, 13, 15], B85 = [9, 11, 14, 1];
+add('7485', AR, {desc: '4-bit magnitude comparator with cascade inputs', np: 16, vcc: 16, gnd: 8,
+  names: sp('B3 I(A<B) I(A=B) I(A>B) O(A>B) O(A=B) O(A<B) GND B0 A0 B1 A1 A2 B2 A3 VCC'), ins: [...A85, ...B85, 2, 3, 4], outs: [5, 6, 7], init: () => ({}),
+  drive(ic, rd, wr) {
+    let a = 0, b = 0;
+    A85.forEach((p, i) => a |= rd(p) << i);
+    B85.forEach((p, i) => b |= rd(p) << i);
+    let gt, eq, lt;
+    if (a > b) { gt = 1; eq = 0; lt = 0; }
+    else if (a < b) { gt = 0; eq = 0; lt = 1; }
+    else { gt = rd(4); eq = rd(3); lt = rd(2); }
+    wr(5, gt); wr(6, eq); wr(7, lt);
+  }});
+
+const DP = 'Displays';
+const DSEG = {a: 7, b: 6, c: 4, d: 2, e: 1, f: 9, g: 10, dp: 5};
+add('7SEG-CA', DP, {desc: '7-segment display, common anode. Connect COM (pin 3 or 8) to +5V and drive a segment low to light it', np: 10, vcc: null, gnd: null, ins: [], outs: [],
+  names: sp('e d COM c dp b a COM f g'), disp: 'ca', init: () => ({})});
+add('7SEG-CC', DP, {desc: '7-segment display, common cathode. Connect COM (pin 3 or 8) to GND and drive a segment high to light it', np: 10, vcc: null, gnd: null, ins: [], outs: [],
+  names: sp('e d COM c dp b a COM f g'), disp: 'cc', init: () => ({})});
+
+/* ---------- state ---------- */
+let ics = [], wires = [], nextIc = 1, nextW = 1;
+let sw = Array(16).fill(0), power = 1, clk = 0, pulseA = 0, pulseB = 0, clkTimer = null;
+let selIc = null, selWire = null, pend = null, wireColor = 'auto', osc = false;
+const uf = new Map(), drv = new Map();
+let rootV = '', rootG = '', chg = false;
+
+const find = k => {
+  if (!uf.has(k)) uf.set(k, k);
+  while (uf.get(k) !== k) { uf.set(k, uf.get(uf.get(k))); k = uf.get(k); }
+  return k;
+};
+const union = (a, b) => { a = find(a); b = find(b); if (a !== b) uf.set(a, b); };
+const key = n => {
+  const t = n.split(':');
+  if (t[0] === 'h') return 'c' + t[1] + (t[2] <= 'e' ? 'T' : 'B');
+  if (t[0] === 'r') return 'r' + t[1];
+  return n;
+};
+const pinKey = (ic, p) => p <= ic.t.k ? 'c' + (ic.c0 + p - 1) + 'B' : 'c' + (ic.c0 + ic.t.np - p) + 'T';
+const getM = r => { let m = drv.get(r); if (!m) { m = new Map(); drv.set(r, m); } return m; };
+const val = r => {
+  const m = drv.get(r);
+  if (!m || !m.size) return null;
+  let l = 0;
+  for (const v of m.values()) if (!v) l = 1;
+  return l ? 0 : 1;
+};
+
+/* ---------- static drawing ---------- */
+const svg = $('#svg');
+svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+const bg = el('g', {}, svg), icL = el('g', {}, svg), wireL = el('g', {}, svg), ovL = el('g', {'pointer-events': 'none'}, svg);
+const ledEls = [], swEls = [], bcd = {};
+const SEGR = {a: [5, 1, 14, 4], b: [19, 5, 4, 14], c: [19, 21, 4, 14], d: [5, 35, 14, 4], e: [1, 21, 4, 14], f: [1, 5, 4, 14], g: [5, 18, 14, 4]};
+const OFFC = '#2b1517', ONC = '#ff4338';
+function glyph(parent, x, y, s) {
+  const g = el('g', {transform: `translate(${x},${y}) scale(${s})`}, parent), m = {};
+  for (const k in SEGR) { const [a, b, c, d] = SEGR[k]; m[k] = el('rect', {x: a, y: b, width: c, height: d, rx: 1.5, fill: OFFC}, g); }
+  m.dp = el('circle', {cx: 26, cy: 37, r: 1.9, fill: OFFC}, g);
+  return m;
+}
+const lightGlyph = (m, lit) => { for (const k in m) m[k].setAttribute('fill', lit[k] ? ONC : OFFC); };
+const HEX = ['1111110', '0110000', '1101101', '1111001', '0110011', '1011011', '1011111', '1110000', '1111111', '1111011', '1110111', '0011111', '1001110', '0111101', '1001111', '1000111'];
+
+function jack(id, x, y, label, ring = '#e0463d', ly = -13) {
+  pos[id] = {x, y};
+  const g = el('g', {class: 'jack', 'data-node': id}, bg);
+  el('circle', {cx: x, cy: y, r: 7.5, fill: '#0a0a0a', stroke: ring, 'stroke-width': 3}, g);
+  el('circle', {cx: x, cy: y, r: 2.4, fill: '#000'}, g);
+  el('circle', {cx: x, cy: y, r: 12, fill: 'transparent'}, g);
+  if (label) txt(g, x, y + ly, label, {size: 11});
+}
+const box = (x, y, w, h, label) => {
+  el('rect', {x, y, width: w, height: h, rx: 7, fill: 'none', stroke: '#cfcdc4', 'stroke-width': 1.5}, bg);
+  txt(bg, x + w / 2, y + h - 9, label, {size: 13, w: 700});
+};
+const slot = i => 244 + i * 29.2;
+
+function drawStatic() {
+  el('rect', {x: 0, y: 0, width: W, height: H, rx: 16, fill: '#dd4743'}, bg);
+  el('rect', {x: 12, y: 12, width: W - 24, height: H - 36 - 12, rx: 8, fill: '#111315'}, bg);
+  txt(bg, 28, H - 16, 'Digital logic trainer', {size: 13, w: 700, a: 'start', fill: '#fff'});
+
+  box(26, 26, 176, 134, 'Power');
+  const pg = el('g', {class: 'pw-sw'}, bg);
+  el('rect', {x: 40, y: 54, width: 40, height: 26, rx: 4, fill: '#0b5c3a', stroke: '#27a06a', 'stroke-width': 2}, pg);
+  const pk = el('rect', {x: 42, y: 56, width: 18, height: 22, rx: 3, fill: '#2fd48b'}, pg);
+  el('rect', {x: 34, y: 48, width: 52, height: 38, fill: 'transparent', 'data-power': 1}, pg);
+  swEls.power = pk;
+  txt(bg, 60, 102, 'Off / On', {size: 10.5});
+  jack('j:vcc', 118, 76, '+5V', '#ff4a3d');
+  jack('j:gnd', 166, 76, 'GND', '#8a8d92');
+
+  box(214, 26, 494, 134, 'LED displays');
+  for (let i = 0; i < 16; i++) {
+    const n = 15 - i, x = slot(i);
+    txt(bg, x, 50, n, {size: 12});
+    ledEls[n] = el('circle', {class: 'led', cx: x, cy: 74, r: 8}, bg);
+    jack('j:led' + n, x, 112);
+  }
+  txt(bg, 461, 138, 'Lit when the input is HIGH', {size: 10.5, fill: '#a9a8a1'});
+
+  box(720, 26, 414, 134, 'BCD displays');
+  [[1, 810], [2, 1044]].forEach(([d, cx]) => {
+    el('rect', {x: cx - 26, y: 36, width: 52, height: 62, rx: 4, fill: '#050505', stroke: '#444'}, bg);
+    bcd[d] = glyph(bg, cx - 17, 42, 1.3);
+    txt(bg, cx - 44, 70, 'D' + d, {size: 10, a: 'end'});
+    'abcd'.split('').forEach((L, i) => {
+      const x = cx - 39 + i * 26;
+      jack('j:d' + d + L, x, 124, L.toUpperCase(), '#e0463d', -13);
+    });
+  });
+
+  // breadboard
+  el('rect', {x: 18, y: BY - 6, width: 1124, height: 310, rx: 8, fill: '#08090a'}, bg);
+  el('rect', {x: 24, y: BY, width: 1112, height: 298, rx: 6, fill: '#ece9e1'}, bg);
+  el('rect', {x: 24, y: R.e + 9, width: 1112, height: R.f - R.e - 18, fill: '#d2cec3'}, bg);
+  for (const r in RL) {
+    const y = RL[r], plus = r[1] === '+';
+    el('line', {x1: colX(0) - 6, x2: colX(N - 1) + 6, y1: y + (r[0] === 'T' ? -9 : 9), y2: y + (r[0] === 'T' ? -9 : 9), stroke: plus ? '#d33' : '#2f6fe0', 'stroke-width': 1.5}, bg);
+    txt(bg, colX(0) - 22, y + 4, plus ? '+' : '−', {size: 13, fill: plus ? '#d33' : '#2f6fe0', w: 700});
+  }
+  for (let c = 0; c < N; c++) {
+    const x = colX(c);
+    for (const r in RL) {
+      const id = `r:${r}:${c}`; pos[id] = {x, y: RL[r]};
+      el('rect', {x: x - 4, y: RL[r] - 4, width: 8, height: 8, rx: 1, fill: '#2a2a2a'}, bg);
+      el('circle', {class: 'hole-hit', 'data-node': id, cx: x, cy: RL[r], r: 7.5}, bg);
+    }
+    for (const r of ROWS) {
+      const id = `h:${c}:${r}`; pos[id] = {x, y: R[r]};
+      el('rect', {x: x - 4, y: R[r] - 4, width: 8, height: 8, rx: 1, fill: '#2a2a2a'}, bg);
+      el('circle', {class: 'hole-hit', 'data-node': id, cx: x, cy: R[r], r: 7.5}, bg);
+    }
+    if (c === 0 || (c + 1) % 5 === 0) {
+      txt(bg, x, R.a - 15, c + 1, {size: 9.5, fill: '#8d8a82'});
+      txt(bg, x, R.j + 20, c + 1, {size: 9.5, fill: '#8d8a82'});
+    }
+  }
+  ROWS.split('').forEach(r => txt(bg, colX(0) - 22, R[r] + 3, r, {size: 9.5, fill: '#8d8a82'}));
+
+  // bottom strip
+  box(26, 492, 176, 156, 'Clock');
+  jack('j:clk', 114, 560, 'Output', '#e0463d', -14);
+  swEls.clkLed = el('circle', {cx: 64, cy: 560, r: 6, fill: '#3a1a1a', stroke: '#6a3a3a'}, bg);
+  swEls.clkTxt = txt(bg, 114, 598, 'Off', {size: 11, w: 700});
+
+  box(214, 492, 494, 156, 'Data switches');
+  for (let i = 0; i < 16; i++) {
+    const n = 15 - i, x = slot(i);
+    jack('j:sw' + n, x, 524);
+    const g = el('g', {class: 'tg'}, bg);
+    el('circle', {cx: x, cy: 578, r: 9, fill: '#7d8187', stroke: '#3c3f44', 'stroke-width': 2}, g);
+    const lever = el('line', {x1: x, y1: 578, x2: x, y2: 600, stroke: '#cfd2d6', 'stroke-width': 5, 'stroke-linecap': 'round'}, g);
+    const knob = el('circle', {cx: x, cy: 600, r: 5.5, fill: '#eceef0'}, g);
+    el('rect', {x: x - 13, y: 548, width: 26, height: 66, fill: 'transparent', 'data-sw': n}, g);
+    swEls[n] = {lever, knob, x};
+    txt(bg, x, 624, 'SW' + n, {size: 9.5});
+  }
+  txt(bg, 224, 556, '1', {size: 8, fill: '#a9a8a1'});
+  txt(bg, 224, 604, '0', {size: 8, fill: '#a9a8a1'});
+
+  box(720, 492, 414, 156, 'Pulse switches');
+  [['a', 'A', 800, 840, 820], ['b', 'B', 1000, 1040, 1020]].forEach(([id, L, x1, x2, bx]) => {
+    jack('j:p' + id, x1, 534, L);
+    jack('j:p' + id + 'n', x2, 534, L + "'");
+    const g = el('g', {class: 'pbtn'}, bg);
+    el('circle', {cx: bx, cy: 588, r: 22, fill: '#2a2d31', stroke: '#555', 'stroke-width': 2}, g);
+    const b = el('circle', {cx: bx, cy: 588, r: 16, fill: '#e24640', 'data-pulse': id}, g);
+    swEls['p' + id] = b;
+    txt(bg, bx, 626, 'Pulse ' + L, {size: 11});
+  });
+}
+
+/* ---------- ICs ---------- */
+function icBox(ic) {
+  const t = ic.t, k = t.k, x1 = colX(ic.c0) - 9, x2 = colX(ic.c0 + k - 1) + 9;
+  return {x1, x2, y1: t.disp ? R.d - 8 : R.e - 11, y2: t.disp ? R.g + 8 : R.f + 11};
+}
+function renderICs() {
+  icL.innerHTML = '';
+  ics.forEach(ic => {
+    const t = ic.t, k = t.k, {x1, x2, y1, y2} = icBox(ic);
+    const g = el('g', {class: 'ic' + (ic.id === selIc ? ' sel' : ''), 'data-ic': ic.id, style: 'touch-action:none'}, icL);
+    el('rect', {class: 'body', x: x1, y: y1, width: x2 - x1, height: y2 - y1, rx: 3, fill: t.disp ? '#26262a' : '#1d1d20', stroke: '#000', 'stroke-width': 1.5}, g);
+    const mid = (y1 + y2) / 2;
+    el('path', {d: `M${x1},${mid - 5} a5,5 0 0 1 0,10`, fill: '#0a0a0b'}, g);
+    for (let p = 1; p <= t.np; p++) {
+      const top = p > k, x = colX(ic.c0 + (top ? t.np - p : p - 1)), y = top ? R.e : R.f;
+      el('rect', {x: x - 3, y: y - 4, width: 6, height: 8, fill: '#aeb2b8'}, g);
+      if (!t.disp) txt(g, x, top ? R.e + 11 : R.f - 4, p, {size: 8, fill: '#9a9da3'});
+    }
+    el('circle', {cx: x1 + 5, cy: y2 - 5, r: 1.8, fill: '#777'}, g);
+    if (t.disp) {
+      txt(g, (x1 + x2) / 2, y1 + 11, `${ic.label}  ${t.id}`, {size: 8, fill: '#f0efe9', w: 600});
+      ic.seg = glyph(g, (x1 + x2) / 2 - 17.5, mid - 22, 1.25);
+    } else {
+      txt(g, (x1 + x2) / 2, R.e + 21, `${ic.label}  ${t.id}`, {size: 10, fill: '#f0efe9', w: 600});
+      ic.pw = el('circle', {cx: x2 - 6, cy: y1 + 6, r: 3, fill: '#c33'}, g);
+    }
+    g.addEventListener('pointerdown', ev => icDown(ev, ic));
+  });
+  refresh();
+}
+function fits(ic, c) {
+  const k = ic.t.k;
+  if (c < 0 || c + k > N) return false;
+  return ics.every(o => o === ic || c + k - 1 < o.c0 || c > o.c0 + o.t.k - 1);
+}
+function autoPlace(type) {
+  const k = TY[type].k;
+  for (const gap of [1, 0]) {
+    for (let c = 1; c + k <= N; c++) {
+      if (ics.every(o => c + k - 1 + gap < o.c0 || c - gap > o.c0 + o.t.k - 1)) return c;
+    }
+  }
+  return -1;
+}
+function addIc(type, c0, id) {
+  const ic = {id: id || nextIc++, type, c0, t: TY[type], roots: []};
+  if (id && id >= nextIc) nextIc = id + 1;
+  ic.label = 'U' + ic.id;
+  ic.s = ic.t.init();
+  ics.push(ic);
+  return ic;
+}
+
+/* ---------- wires ---------- */
+const PAL = ['#2f6fe0', '#e0b92f', '#2fb55a', '#e07b2f', '#a24fd6', '#e8e8e8', '#17b8c8'];
+function autoColor(a, b) {
+  const s = [a, b];
+  if (s.some(n => n === 'j:vcc' || /^r:[TB]\+/.test(n))) return '#e03a32';
+  if (s.some(n => n === 'j:gnd' || /^r:[TB]-/.test(n))) return '#1c1c1c';
+  return PAL[wires.length % PAL.length];
+}
+function addWire(a, b, color) {
+  if (wires.some(w => (w.a === a && w.b === b) || (w.a === b && w.b === a))) return;
+  wires.push({id: nextW++, a, b, color: color || (wireColor === 'auto' ? autoColor(a, b) : wireColor)});
+}
+function wirePath(a, b) {
+  const A = pos[a], B = pos[b], d = Math.hypot(A.x - B.x, A.y - B.y), arch = Math.min(34, 8 + d * 0.12);
+  return `M${A.x},${A.y} Q${(A.x + B.x) / 2},${(A.y + B.y) / 2 - arch} ${B.x},${B.y}`;
+}
+function renderWires() {
+  wireL.innerHTML = '';
+  wires.forEach(w => {
+    if (!pos[w.a] || !pos[w.b]) return;
+    const d = wirePath(w.a, w.b), g = el('g', {}, wireL);
+    el('path', {d, fill: 'none', stroke: w.id === selWire ? '#6cb6ff' : 'rgba(255,255,255,.32)', 'stroke-width': 7, 'stroke-linecap': 'round', 'pointer-events': 'none'}, g);
+    el('path', {d, fill: 'none', stroke: w.color, 'stroke-width': 4, 'stroke-linecap': 'round', 'pointer-events': 'none'}, g);
+    el('path', {d, fill: 'none', stroke: 'transparent', 'stroke-width': 12, 'data-wire': w.id, 'pointer-events': 'stroke', style: 'cursor:pointer'}, g);
+    [w.a, w.b].forEach(n => el('circle', {cx: pos[n].x, cy: pos[n].y, r: 3.4, fill: w.color, stroke: 'rgba(0,0,0,.5)', 'pointer-events': 'none'}, g));
+  });
+}
+function renderOv(m) {
+  ovL.innerHTML = '';
+  if (!pend) return;
+  const p = pos[pend];
+  el('circle', {cx: p.x, cy: p.y, r: 11, fill: 'none', stroke: '#6cb6ff', 'stroke-width': 2.5}, ovL);
+  if (m) el('line', {x1: p.x, y1: p.y, x2: m.x, y2: m.y, stroke: '#6cb6ff', 'stroke-width': 2, 'stroke-dasharray': '5 4'}, ovL);
+}
+const nodeName = n => {
+  if (n.startsWith('j:')) {
+    const k = n.slice(2);
+    if (k === 'vcc') return '+5V';
+    if (k === 'gnd') return 'GND';
+    if (k.startsWith('sw')) return 'SW' + k.slice(2);
+    if (k.startsWith('led')) return 'LED ' + k.slice(3);
+    if (k === 'clk') return 'Clock';
+    if (k.startsWith('d')) return `BCD D${k[1]} ${k[2].toUpperCase()}`;
+    return {pa: 'Pulse A', pan: "Pulse A'", pb: 'Pulse B', pbn: "Pulse B'"}[k];
+  }
+  const t = n.split(':');
+  return t[0] === 'h' ? `column ${+t[1] + 1} row ${t[2]}` : `rail ${t[1]} (${+t[2] + 1})`;
+};
+
+/* ---------- simulation ---------- */
+function build() {
+  uf.clear(); drv.clear();
+  wires.forEach(w => union(key(w.a), key(w.b)));
+  ics.forEach(ic => {
+    ic.roots = [null];
+    for (let p = 1; p <= ic.t.np; p++) ic.roots.push(find(pinKey(ic, p)));
+    ic.rd = p => { const v = val(ic.roots[p]); return v === null ? 1 : v; };
+    ic.wr = (p, v) => {
+      const m = getM(ic.roots[p]), k = 'u' + ic.id + 'p' + p;
+      if (m.get(k) !== v) { m.set(k, v); chg = true; }
+    };
+  });
+  rootV = find('j:vcc'); rootG = find('j:gnd');
+}
+function applySources() {
+  const put = (node, id, v) => { const m = getM(find(node)); if (v === null) m.delete(id); else m.set(id, v); };
+  put('j:vcc', 'sup1', power ? 1 : null);
+  put('j:gnd', 'sup0', power ? 0 : null);
+  for (let i = 0; i < 16; i++) put('j:sw' + i, 'sw' + i, power ? sw[i] : null);
+  put('j:clk', 'clk', power ? clk : null);
+  put('j:pa', 'pa', power ? pulseA : null);
+  put('j:pan', 'pan', power ? 1 - pulseA : null);
+  put('j:pb', 'pb', power ? pulseB : null);
+  put('j:pbn', 'pbn', power ? 1 - pulseB : null);
+}
+function settle() {
+  applySources();
+  ics.forEach(ic => {
+    const t = ic.t;
+    const was = ic.powered;
+    ic.powered = !!power && (t.vcc ? ic.roots[t.vcc] === rootV && ic.roots[t.gnd] === rootG && rootV !== rootG : true);
+    if (!ic.powered) {
+      if (was !== false) ic.s = t.init();
+      t.outs.forEach(p => getM(ic.roots[p]).delete('u' + ic.id + 'p' + p));
+    }
+  });
+  let n = 0;
+  do {
+    chg = false;
+    ics.forEach(ic => {
+      if (!ic.powered || !ic.t.seq) return;
+      const before = JSON.stringify(ic.s);
+      ic.t.seq(ic, ic.rd);
+      if (JSON.stringify(ic.s) !== before) chg = true;
+    });
+    ics.forEach(ic => { if (ic.powered && ic.t.drive) ic.t.drive(ic, ic.rd, ic.wr); });
+  } while (chg && ++n < 80);
+  osc = chg;
+  refresh();
+}
+
+/* ---------- views ---------- */
+const lastHtml = {};
+const setHtml = (id, html) => { if (lastHtml[id] !== html) { lastHtml[id] = html; $(id).innerHTML = html; } };
+function refresh() {
+  for (let n = 0; n < 16; n++) ledEls[n].classList.toggle('on', power && val(find('j:led' + n)) === 1);
+  [1, 2].forEach(d => {
+    const bits = 'abcd'.split('').map(L => val(find(`j:d${d}${L}`)));
+    const live = power && bits.some(b => b !== null);
+    const v = bits.reduce((s, b, i) => s | ((b || 0) << i), 0);
+    const lit = {};
+    'abcdefg'.split('').forEach((s, i) => lit[s] = live && HEX[v][i] === '1');
+    lightGlyph(bcd[d], lit);
+  });
+  ics.forEach(ic => {
+    if (ic.t.disp) {
+      const com = [3, 8].map(p => val(ic.roots[p])).find(v => v !== null);
+      const lit = {};
+      for (const s in DSEG) {
+        const v = val(ic.roots[DSEG[s]]);
+        lit[s] = ic.t.disp === 'ca' ? com === 1 && v === 0 : com === 0 && v === 1;
+      }
+      if (ic.seg) lightGlyph(ic.seg, lit);
+    } else if (ic.pw) ic.pw.setAttribute('fill', ic.powered ? '#3dff86' : '#d33');
+  });
+  swEls.clkLed.setAttribute('fill', power && clk ? '#ff5148' : '#3a1a1a');
+  swEls.clkTxt.textContent = clkHz ? `${clkHz} Hz` : 'Off';
+  swEls.power.setAttribute('x', power ? 62 : 42);
+  swEls.power.setAttribute('fill', power ? '#2fd48b' : '#6b746f');
+  swEls.pa.setAttribute('fill', pulseA ? '#ff8a84' : '#e24640');
+  swEls.pb.setAttribute('fill', pulseB ? '#ff8a84' : '#e24640');
+  renderInfo();
+  renderDiag();
+}
+function drawSw(n) {
+  const s = swEls[n], y = sw[n] ? 556 : 600;
+  s.lever.setAttribute('y2', y); s.knob.setAttribute('cy', y);
+}
+const lvl = r => { const v = val(r); return v === null ? '<i class="fl">–</i>' : v ? '<i class="hi">1</i>' : '<i class="lo">0</i>'; };
+function renderInfo() {
+  const ic = ics.find(i => i.id === selIc);
+  if (!ic) {
+    setHtml('#info', '<h3>No IC selected</h3><p>Pick a chip type in the toolbar and press Add IC. Tap an IC on the board to see its pinout and live pin levels. Drag it sideways to move it.</p>');
+    return;
+  }
+  const t = ic.t, k = t.k;
+  let rows = '';
+  for (let i = 0; i < k; i++) {
+    const l = i + 1, r = t.np - i;
+    rows += `<div class="pin"><b>${l}</b><span>${t.names[l - 1]}</span>${lvl(ic.roots[l])}</div>`;
+    rows += `<div class="pin r"><b>${r}</b><span>${t.names[r - 1]}</span>${lvl(ic.roots[r])}</div>`;
+  }
+  const st = t.vcc ? (ic.powered ? 'Powered' : 'Not powered') : 'No power pins';
+  setHtml('#info', `<h3>${ic.label} · ${t.id} · ${st}</h3><p>${t.desc}</p><div class="dip">${rows}</div><p style="margin-top:8px">Pin 1 is at the bottom left. The left column is the bottom row of the chip, the right column is the top row.</p><button id="rmIc">Remove ${ic.label}</button>`);
+  const b = $('#rmIc'); if (b) b.onclick = delSelected;
+}
+function driverName(k) {
+  if (k === 'sup1') return '+5V';
+  if (k === 'sup0') return 'GND';
+  if (k.startsWith('sw')) return 'SW' + k.slice(2);
+  if (k === 'clk') return 'Clock';
+  if (k[0] === 'p') return {pa: 'Pulse A', pan: "Pulse A'", pb: 'Pulse B', pbn: "Pulse B'"}[k];
+  const m = /^u(\d+)p(\d+)$/.exec(k), ic = ics.find(i => i.id === +m[1]);
+  return `${ic.label} pin ${m[2]}`;
+}
+function renderDiag() {
+  const out = [], hints = [];
+  if (!power) out.push(['err', 'Trainer power is off. Use the Off / On switch on the Power panel.']);
+  else if (rootV === rootG) out.push(['err', '+5V and GND are wired together. Remove the wire that joins them.']);
+  ics.forEach(ic => {
+    if (!power || !ic.t.vcc) return;
+    if (!ic.powered) {
+      const m = [];
+      if (ic.roots[ic.t.vcc] !== rootV) m.push(`pin ${ic.t.vcc} (VCC) is not on +5V`);
+      if (ic.roots[ic.t.gnd] !== rootG) m.push(`pin ${ic.t.gnd} (GND) is not on ground`);
+      if (m.length) out.push(['err', `${ic.label} ${ic.t.id} has no power: ${m.join(' and ')}.`]);
+    }
+  });
+  if (power && rootV !== rootG) {
+    for (const [r, m] of drv) {
+      let h = 0, l = 0;
+      m.forEach(v => v ? h = 1 : l = 1);
+      if (h && l) out.push(['warn', `Conflict: ${[...m.keys()].map(driverName).join(', ')} drive opposite levels on the same node.`]);
+    }
+  }
+  if (osc) out.push(['warn', 'The circuit is not settling. A feedback loop is oscillating.']);
+  ics.filter(ic => ic.powered).forEach(ic => {
+    const f = ic.t.ins.filter(p => { const m = drv.get(ic.roots[p]); return !m || !m.size; });
+    if (f.length) hints.push(`${ic.label} ${ic.t.id}: pins ${f.join(', ')} are not connected (read as HIGH).`);
+  });
+  if (!out.length) out.push(['ok', ics.length ? 'All ICs are powered. No shorts or conflicts found.' : 'No ICs placed yet.']);
+  let html = '<h3>Wiring check</h3>' + out.map(([c, m]) => `<div class="msg ${c}">${m}</div>`).join('');
+  if (hints.length) html += `<details><summary>${hints.length} unconnected input hint${hints.length > 1 ? 's' : ''}</summary>${hints.map(h => `<div class="msg warn">${h}</div>`).join('')}</details>`;
+  setHtml('#diag', html);
+}
+const hint = s => { $('#hint').textContent = s; };
+
+/* ---------- interaction ---------- */
+function svgPt(e) {
+  const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+const nearestCol = x => { let b = 0, d = 1e9; for (let c = 0; c < N; c++) { const e = Math.abs(colX(c) - x); if (e < d) { d = e; b = c; } } return b; };
+let drag = null, justDragged = false;
+function selectIc(id) {
+  selIc = id; selWire = null;
+  icL.querySelectorAll('.ic').forEach(g => g.classList.toggle('sel', +g.dataset.ic === id));
+  renderWires(); renderInfo();
+}
+function icDown(e, ic) {
+  e.preventDefault();
+  selectIc(ic.id);
+  const p = svgPt(e);
+  drag = {ic, off: p.x - colX(ic.c0), x0: p.x, c0: ic.c0, moved: false, g: e.currentTarget};
+  window.addEventListener('pointermove', icMove);
+  window.addEventListener('pointerup', icUp, {once: true});
+  window.addEventListener('pointercancel', icUp, {once: true});
+}
+function icMove(e) {
+  const p = svgPt(e);
+  if (!drag.moved && Math.abs(p.x - drag.x0) < 5) return;
+  drag.moved = true;
+  const c = nearestCol(p.x - drag.off);
+  if (fits(drag.ic, c)) {
+    drag.c0 = c;
+    drag.g.setAttribute('transform', `translate(${colX(c) - colX(drag.ic.c0)},0)`);
+  }
+}
+function icUp() {
+  window.removeEventListener('pointermove', icMove);
+  const d = drag; drag = null;
+  if (d && d.moved) {
+    justDragged = true; setTimeout(() => justDragged = false, 50);
+    d.ic.c0 = d.c0;
+    renderICs(); build(); settle(); save();
+  }
+}
+svg.addEventListener('touchmove', e => { if (drag) e.preventDefault(); }, {passive: false});
+
+svg.addEventListener('click', e => {
+  if (justDragged || e.target.closest('.ic')) return;
+  const t = e.target;
+  const w = t.closest('[data-wire]');
+  if (w) { selWire = +w.dataset.wire; selIc = null; renderWires(); icL.querySelectorAll('.ic').forEach(g => g.classList.remove('sel')); renderInfo(); hint('Wire selected. Press Delete selected to remove it.'); return; }
+  const s = t.closest('[data-sw]');
+  if (s) { const n = +s.dataset.sw; sw[n] ^= 1; drawSw(n); settle(); save(); return; }
+  if (t.closest('[data-power]')) { power ^= 1; settle(); save(); return; }
+  const n = t.closest('[data-node]');
+  if (n) {
+    const id = n.dataset.node;
+    selWire = null; selIc = null;
+    icL.querySelectorAll('.ic').forEach(g => g.classList.remove('sel'));
+    if (!pend) { pend = id; hint(`Wire from ${nodeName(id)}. Tap the other end.`); }
+    else if (pend === id) { pend = null; hint('Wire cancelled.'); }
+    else { addWire(pend, id); hint(`Wired ${nodeName(pend)} to ${nodeName(id)}.`); pend = null; renderWires(); build(); settle(); save(); }
+    renderOv(); renderWires(); renderInfo();
+    return;
+  }
+  pend = null; selWire = null; selIc = null;
+  icL.querySelectorAll('.ic').forEach(g => g.classList.remove('sel'));
+  renderOv(); renderWires(); renderInfo();
+});
+svg.addEventListener('pointermove', e => { if (pend && !drag) renderOv(svgPt(e)); });
+const press = (id, v) => { if (id === 'a') pulseA = v; else pulseB = v; settle(); };
+svg.addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-pulse]');
+  if (!b) return;
+  const id = b.dataset.pulse;
+  press(id, 1);
+  const up = () => { press(id, 0); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up); };
+  window.addEventListener('pointerup', up);
+  window.addEventListener('pointercancel', up);
+});
+
+function delSelected() {
+  if (selWire !== null) { wires = wires.filter(w => w.id !== selWire); selWire = null; hint('Wire deleted.'); }
+  else if (selIc !== null) { ics = ics.filter(i => i.id !== selIc); selIc = null; hint('IC removed.'); }
+  else { hint('Nothing selected. Tap an IC or a wire first.'); return; }
+  renderICs(); renderWires(); build(); settle(); save();
+}
+window.addEventListener('keydown', e => {
+  if (/SELECT|INPUT/.test(e.target.tagName)) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') delSelected();
+  if (e.key === 'Escape') { pend = null; renderOv(); hint('Wire cancelled.'); }
+});
+
+/* ---------- toolbar ---------- */
+const sel = $('#icSel');
+[...new Set(Object.values(TY).map(t => t.cat))].forEach(cat => {
+  const g = document.createElement('optgroup'); g.label = cat;
+  Object.values(TY).filter(t => t.cat === cat).forEach(t => {
+    const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.id} · ${t.desc.split('.')[0].split(',')[0]}`; g.appendChild(o);
+  });
+  sel.appendChild(g);
+});
+$('#addIc').onclick = () => {
+  const type = sel.value, c = autoPlace(type);
+  if (c < 0) { hint('No room on the breadboard for another IC.'); return; }
+  const ic = addIc(type, c);
+  selIc = ic.id; renderICs(); build(); settle(); save();
+  hint(`${ic.label} (${type}) placed. Pin 1 is at column ${c + 1}, bottom row.`);
+};
+const colorsEl = $('#colors');
+['auto', '#e03a32', '#1c1c1c', '#2f6fe0', '#2fb55a', '#e0b92f', '#e07b2f', '#a24fd6', '#e8e8e8'].forEach(c => {
+  const b = document.createElement('button');
+  b.className = 'col' + (c === 'auto' ? ' auto' : '') + (c === wireColor ? ' on' : '');
+  if (c !== 'auto') b.style.background = c;
+  b.setAttribute('aria-label', c === 'auto' ? 'Automatic wire colour' : 'Wire colour ' + c);
+  b.onclick = () => { wireColor = c; colorsEl.querySelectorAll('.col').forEach(x => x.classList.toggle('on', x === b)); if (selWire !== null) { wires.find(w => w.id === selWire).color = c === 'auto' ? '#2f6fe0' : c; renderWires(); save(); } };
+  colorsEl.appendChild(b);
+});
+$('#delSel').onclick = delSelected;
+$('#clearW').onclick = () => { wires = []; selWire = null; pend = null; renderOv(); renderWires(); build(); settle(); save(); hint('All wires removed.'); };
+let armed = null;
+$('#clearAll').onclick = e => {
+  const b = e.currentTarget;
+  if (!armed) { b.textContent = 'Tap again to confirm'; armed = setTimeout(() => { armed = null; b.textContent = 'Clear all'; }, 3000); return; }
+  clearTimeout(armed); armed = null; b.textContent = 'Clear all';
+  ics = []; wires = []; sw.fill(0); selIc = selWire = pend = null;
+  for (let n = 0; n < 16; n++) drawSw(n);
+  renderOv(); renderICs(); renderWires(); build(); settle(); save();
+  hint('Board cleared.');
+};
+$('#demo').onclick = () => {
+  ics = []; wires = []; sw.fill(0); sw[0] = 1; sw[1] = 1; nextIc = 1; nextW = 1; power = 1;
+  const ic = addIc('7408', 10);
+  selIc = ic.id; pend = null;
+  [['j:vcc', 'r:T+:2', '#e03a32'], ['j:gnd', 'r:T-:2', '#1c1c1c'], ['r:T+:3', 'h:10:a', '#e03a32'], ['r:T-:3', 'h:16:j', '#1c1c1c'],
+   ['j:sw0', 'h:10:j', '#2f6fe0'], ['j:sw1', 'h:11:j', '#e0b92f'], ['h:12:j', 'j:led0', '#2fb55a']].forEach(([a, b, c]) => addWire(a, b, c));
+  for (let n = 0; n < 16; n++) drawSw(n);
+  renderOv(); renderICs(); renderWires(); build(); settle(); save();
+  hint('Demo: a 7408 AND gate. SW0 and SW1 feed gate 1, the output lights LED 0. Flip SW0 or SW1 to test it.');
+};
+let clkHz = 0;
+$('#clkSel').onchange = e => {
+  clkHz = +e.target.value;
+  clearInterval(clkTimer); clkTimer = null; clk = 0;
+  if (clkHz) clkTimer = setInterval(() => { clk ^= 1; settle(); }, 500 / clkHz);
+  settle();
+};
+let zoom = 1;
+const stage = $('#stage');
+const setZoom = (z, cx, cy) => {
+  const r = stage.getBoundingClientRect();
+  const ax = cx === undefined ? r.width / 2 : cx - r.left, ay = cy === undefined ? r.height / 2 : cy - r.top;
+  const px = (stage.scrollLeft + ax) / zoom, py = (stage.scrollTop + ay) / zoom;
+  zoom = Math.max(0.3, Math.min(2.4, z));
+  svg.style.width = W * zoom + 'px'; svg.style.height = H * zoom + 'px';
+  stage.scrollLeft = px * zoom - ax; stage.scrollTop = py * zoom - ay;
+};
+const fit = () => { stage.scrollLeft = 0; stage.scrollTop = 0; setZoom(Math.max(0.3, Math.min(1.2, (stage.clientWidth - 28) / W))); };
+$('#zIn').onclick = () => setZoom(zoom * 1.25);
+$('#zOut').onclick = () => setZoom(zoom / 1.25);
+$('#zFit').onclick = fit;
+let pinch = null;
+const tdist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+stage.addEventListener('touchstart', e => { if (e.touches.length === 2) pinch = {d: tdist(e.touches), z: zoom}; }, {passive: true});
+stage.addEventListener('touchmove', e => {
+  if (!pinch || e.touches.length !== 2) return;
+  e.preventDefault();
+  const t = e.touches;
+  setZoom(pinch.z * tdist(t) / pinch.d, (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+}, {passive: false});
+stage.addEventListener('touchend', e => { if (e.touches.length < 2) pinch = null; });
+stage.addEventListener('wheel', e => { if (e.ctrlKey) { e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.1 : 0.9), e.clientX, e.clientY); } }, {passive: false});
+
+/* ---------- persistence ---------- */
+let saveT = null;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    try { await window.storage.set('trainer:v1', JSON.stringify({ics: ics.map(i => ({id: i.id, type: i.type, c0: i.c0})), wires, sw, power, nextW})); } catch (e) {}
+  }, 300);
+}
+async function load() {
+  try {
+    const r = await window.storage.get('trainer:v1');
+    if (!r) return false;
+    const d = JSON.parse(r.value);
+    ics = []; d.ics.forEach(i => { if (TY[i.type]) addIc(i.type, i.c0, i.id); });
+    wires = d.wires.filter(w => pos[w.a] && pos[w.b]); nextW = d.nextW || wires.length + 1;
+    sw = d.sw; power = d.power;
+    return true;
+  } catch (e) { return false; }
+}
+
+drawStatic();
+for (let n = 0; n < 16; n++) drawSw(n);
+if (window.innerWidth < 720) setZoom(0.85); else fit();
+const t0 = Date.now();
+const step = (pct, msg) => { $('#loadBar').style.width = pct + '%'; $('#loadTxt').textContent = msg; };
+const wait = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  step(30, 'Laying out the breadboard');
+  await wait(250);
+  step(60, 'Loading IC library');
+  await load();
+  await wait(250);
+  step(90, 'Restoring your circuit');
+  for (let n = 0; n < 16; n++) drawSw(n);
+  renderICs(); renderWires(); build(); settle();
+  step(100, 'Ready');
+  await wait(Math.max(0, 1500 - (Date.now() - t0)));
+  $('#loader').classList.add('done');
+  hint(ics.length || wires.length ? 'Circuit restored. Tap a hole or jack to start a wire.' : 'Press Load demo to see a working circuit, or add an IC and start wiring. Tap a hole or jack, then tap where the wire should end.');
+})();
+})();
+</script>
+</body>
+</html>
