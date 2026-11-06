@@ -100,7 +100,7 @@ summary{cursor:pointer}
   <div class="by">Developed by <b>Hamim</b></div>
 </div>
 <header class="top">
-  <div class="brand"><span class="logo"><i></i><i></i></span><div><b>Logic Trainer</b><small>Virtual digital lab bench</small></div></div>
+  <div class="brand"><span class="logo"><i></i><i></i></span><div><b>Logic Trainer</b><small>Virtual digital lab bench · v2</small></div></div>
   <div class="tools">
     <div class="cell"><span class="lbl">Part</span><select id="icSel" aria-label="IC type"></select><button id="addIc" class="go">Add IC</button></div>
     <div class="cell"><span class="lbl">Wire</span><span id="colors" class="swatches"></span></div>
@@ -358,7 +358,7 @@ let ics = [], wires = [], nextIc = 1, nextW = 1;
 let sw = Array(16).fill(0), power = 1, clk = 0, pulseA = 0, pulseB = 0, clkTimer = null;
 let selIc = null, selWire = null, pend = null, wireColor = 'auto', osc = false;
 const uf = new Map(), drv = new Map();
-let rootV = '', rootG = '', chg = false;
+let rootV = '', rootG = '', chg = false, rebuilt = false;
 
 const find = k => {
   if (!uf.has(k)) uf.set(k, k);
@@ -385,7 +385,7 @@ const val = r => {
 /* ---------- static drawing ---------- */
 const svg = $('#svg');
 svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-const bg = el('g', {}, svg), icL = el('g', {}, svg), wireL = el('g', {}, svg), ovL = el('g', {'pointer-events': 'none'}, svg);
+const bg0 = el('g', {}, svg), wireHitL = el('g', {}, svg), bg = el('g', {}, svg), icL = el('g', {}, svg), wireL = el('g', {}, svg), ovL = el('g', {'pointer-events': 'none'}, svg);
 const ledEls = [], swEls = [], bcd = {};
 const SEGR = {a: [5, 1, 14, 4], b: [19, 5, 4, 14], c: [19, 21, 4, 14], d: [5, 35, 14, 4], e: [1, 21, 4, 14], f: [1, 5, 4, 14], g: [5, 18, 14, 4]};
 const OFFC = '#2b1517', ONC = '#ff4338';
@@ -413,8 +413,8 @@ const box = (x, y, w, h, label) => {
 const slot = i => 244 + i * 29.2;
 
 function drawStatic() {
-  el('rect', {x: 0, y: 0, width: W, height: H, rx: 16, fill: '#dd4743'}, bg);
-  el('rect', {x: 12, y: 12, width: W - 24, height: H - 36 - 12, rx: 8, fill: '#111315'}, bg);
+  el('rect', {x: 0, y: 0, width: W, height: H, rx: 16, fill: '#dd4743'}, bg0);
+  el('rect', {x: 12, y: 12, width: W - 24, height: H - 36 - 12, rx: 8, fill: '#111315'}, bg0);
   txt(bg, 28, H - 16, 'Digital logic trainer', {size: 13, w: 700, a: 'start', fill: '#fff'});
 
   box(26, 26, 176, 134, 'Power');
@@ -438,7 +438,7 @@ function drawStatic() {
 
   box(720, 26, 414, 134, 'BCD displays');
   [[1, 810], [2, 1044]].forEach(([d, cx]) => {
-    el('rect', {x: cx - 26, y: 36, width: 52, height: 62, rx: 4, fill: '#050505', stroke: '#444'}, bg);
+    el('rect', {x: cx - 26, y: 36, width: 52, height: 62, rx: 4, fill: '#050505', stroke: '#444'}, bg0);
     bcd[d] = glyph(bg, cx - 17, 42, 1.3);
     txt(bg, cx - 44, 70, 'D' + d, {size: 10, a: 'end'});
     'abcd'.split('').forEach((L, i) => {
@@ -448,9 +448,9 @@ function drawStatic() {
   });
 
   // breadboard
-  el('rect', {x: 18, y: BY - 6, width: 1124, height: 310, rx: 8, fill: '#08090a'}, bg);
-  el('rect', {x: 24, y: BY, width: 1112, height: 298, rx: 6, fill: '#ece9e1'}, bg);
-  el('rect', {x: 24, y: R.e + 9, width: 1112, height: R.f - R.e - 18, fill: '#d2cec3'}, bg);
+  el('rect', {x: 18, y: BY - 6, width: 1124, height: 310, rx: 8, fill: '#08090a'}, bg0);
+  el('rect', {x: 24, y: BY, width: 1112, height: 298, rx: 6, fill: '#ece9e1'}, bg0);
+  el('rect', {x: 24, y: R.e + 9, width: 1112, height: R.f - R.e - 18, fill: '#d2cec3'}, bg0);
   for (const r in RL) {
     const y = RL[r], plus = r[1] === '+';
     el('line', {x1: colX(0) - 6, x2: colX(N - 1) + 6, y1: y + (r[0] === 'T' ? -9 : 9), y2: y + (r[0] === 'T' ? -9 : 9), stroke: plus ? '#d33' : '#2f6fe0', 'stroke-width': 1.5}, bg);
@@ -578,13 +578,13 @@ function wirePath(a, b) {
   return `M${A.x},${A.y} Q${(A.x + B.x) / 2},${(A.y + B.y) / 2 - arch} ${B.x},${B.y}`;
 }
 function renderWires() {
-  wireL.innerHTML = '';
+  wireL.innerHTML = ''; wireHitL.innerHTML = '';
   wires.forEach(w => {
     if (!pos[w.a] || !pos[w.b]) return;
     const d = wirePath(w.a, w.b), g = el('g', {}, wireL);
     el('path', {d, fill: 'none', stroke: w.id === selWire ? '#6cb6ff' : 'rgba(255,255,255,.32)', 'stroke-width': 7, 'stroke-linecap': 'round', 'pointer-events': 'none'}, g);
     el('path', {d, fill: 'none', stroke: w.color, 'stroke-width': 4, 'stroke-linecap': 'round', 'pointer-events': 'none'}, g);
-    el('path', {d, fill: 'none', stroke: 'transparent', 'stroke-width': 12, 'data-wire': w.id, 'pointer-events': 'stroke', style: 'cursor:pointer'}, g);
+    el('path', {d, fill: 'none', stroke: 'transparent', 'stroke-width': 12, 'data-wire': w.id, 'pointer-events': 'stroke', style: 'cursor:pointer'}, wireHitL);
     [w.a, w.b].forEach(n => el('circle', {cx: pos[n].x, cy: pos[n].y, r: 3.4, fill: w.color, stroke: 'rgba(0,0,0,.5)', 'pointer-events': 'none'}, g));
   });
 }
@@ -624,6 +624,7 @@ function build() {
     };
   });
   rootV = find('j:vcc'); rootG = find('j:gnd');
+  rebuilt = true;
 }
 function applySources() {
   const put = (node, id, v) => { const m = getM(find(node)); if (v === null) m.delete(id); else m.set(id, v); };
@@ -636,29 +637,41 @@ function applySources() {
   put('j:pb', 'pb', power ? pulseB : null);
   put('j:pbn', 'pbn', power ? 1 - pulseB : null);
 }
+function comb() {
+  let n = 0;
+  do {
+    chg = false;
+    ics.forEach(ic => { if (ic.powered && ic.t.drive) ic.t.drive(ic, ic.rd, ic.wr); });
+  } while (chg && ++n < 80);
+  return chg;
+}
+function clearPrev(ic) {
+  (Array.isArray(ic.s) ? ic.s : [ic.s]).forEach(o => { for (const k of ['p', 'pa', 'pb']) if (k in o) o[k] = null; });
+}
 function settle() {
   applySources();
   ics.forEach(ic => {
-    const t = ic.t;
-    const was = ic.powered;
+    const t = ic.t, was = ic.powered;
     ic.powered = !!power && (t.vcc ? ic.roots[t.vcc] === rootV && ic.roots[t.gnd] === rootG && rootV !== rootG : true);
     if (!ic.powered) {
       if (was !== false) ic.s = t.init();
       t.outs.forEach(p => getM(ic.roots[p]).delete('u' + ic.id + 'p' + p));
     }
   });
-  let n = 0;
-  do {
-    chg = false;
+  let bad = comb();
+  if (rebuilt) { ics.forEach(clearPrev); rebuilt = false; }
+  for (let n = 0; n < 60; n++) {
+    let moved = false;
     ics.forEach(ic => {
       if (!ic.powered || !ic.t.seq) return;
       const before = JSON.stringify(ic.s);
       ic.t.seq(ic, ic.rd);
-      if (JSON.stringify(ic.s) !== before) chg = true;
+      if (JSON.stringify(ic.s) !== before) moved = true;
     });
-    ics.forEach(ic => { if (ic.powered && ic.t.drive) ic.t.drive(ic, ic.rd, ic.wr); });
-  } while (chg && ++n < 80);
-  osc = chg;
+    if (!moved) break;
+    bad = comb();
+  }
+  osc = bad;
   refresh();
 }
 
