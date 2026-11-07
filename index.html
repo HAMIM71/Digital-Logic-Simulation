@@ -6,36 +6,52 @@
 <title>Digital Logic Trainer</title>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#0e1012;--panel:#15181c;--line:#262b31;--ink:#ecebe6;--dim:#9aa0a8;--red:#dd4743;--green:#46ff8b;--blue:#6cb6ff}
+:root{--bg:#0d0f11;--panel:#14171b;--panel2:#1a1e23;--line:#262b31;--ink:#eceae4;--dim:#98a0a9;--red:#e04a45;--green:#46ff8b;--blue:#6cb6ff;--amber:#f2b632}
 html{background:var(--bg)}
 html,body{overflow-x:hidden}
-body{margin:0;color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1200px 500px at 50% -80px,#1d2127,var(--bg))}
-.top{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding:10px 14px;background:rgba(14,16,18,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px}
-.brand b{display:block;font-size:16px;letter-spacing:.2px;line-height:1.1}
+body{margin:0;color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;background:radial-gradient(1200px 520px at 50% -120px,#1c2026,var(--bg))}
+button,select,input{font:inherit;color:inherit}
+button,select{background:#20252b;border:1px solid #333a42;border-radius:8px;padding:7px 11px;cursor:pointer;transition:background .12s,border-color .12s,transform .08s}
+button:hover,select:hover{background:#2a3037;border-color:#47505a}
+button:active{transform:translateY(1px)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+button.go{background:var(--red);border-color:var(--red);color:#fff;font-weight:650}
+button.go:hover{background:#ec5d58;border-color:#ec5d58}
+button.danger:hover{border-color:#a83a36;color:#ffb3af}
+.sticky{position:sticky;top:0;z-index:30;background:rgba(13,15,17,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:10px 16px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:11px;flex:none}
+.brand b{display:block;font-size:16px;line-height:1.15}
 .brand small{color:var(--dim);font-size:11.5px}
 .logo{width:34px;height:34px;border-radius:9px;background:var(--red);display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
 .logo i{border-radius:50%;background:#111}
 .logo i:last-child{background:var(--green);box-shadow:0 0 6px var(--green)}
-.tools{display:flex;flex-wrap:wrap;gap:8px;flex:1}
-.cell{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+.chips{display:flex;gap:8px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:12.5px;white-space:nowrap;color:#d6d9dd}
+button.chip{cursor:pointer}
+.chip i{width:8px;height:8px;border-radius:50%;background:#555}
+.chip.ok i{background:var(--green);box-shadow:0 0 7px var(--green)}
+.chip.bad i{background:#ff5b52;box-shadow:0 0 7px #ff5b52}
+.chip.off i{background:#6b7078}
+.actions{display:flex;gap:8px;flex:none}
+.strip{display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.cell{display:flex;align-items:center;gap:6px;flex:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 8px}
 .lbl{color:var(--dim);font-size:11.5px;margin-right:2px}
-.swatches{display:flex;gap:5px;flex-wrap:wrap}
-#icSel{max-width:210px;text-overflow:ellipsis}
-button,select{font:inherit;color:inherit;background:#20252b;border:1px solid #333a42;border-radius:7px;padding:6px 10px;cursor:pointer;transition:background .12s,border-color .12s}
-button:hover,select:hover{background:#2a3037;border-color:#444d57}
-button:active{transform:translateY(1px)}
-button:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
-button.go{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
-button.go:hover{background:#ea5c57}
-button.danger:hover{border-color:#a83a36;color:#ffb3af}
+.swatches{display:flex;gap:5px}
 .col{width:22px;height:22px;border-radius:50%;border:2px solid #4a5058;padding:0}
 .col.on{border-color:#fff;box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--blue)}
 .col.auto{background:conic-gradient(#d33 0 25%,#2f6fe0 0 50%,#2fb55a 0 75%,#e0b92f 0)}
-#hint{display:flex;align-items:center;gap:10px;margin:12px 14px 0;padding:9px 14px;min-height:40px;color:#d3d6da;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;padding:14px 16px;align-items:start}
+.stagewrap{position:relative;background:#090a0c;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+#hint{display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:42px;color:#d3d6da;background:var(--panel);border-bottom:1px solid var(--line);font-size:13.5px}
 #hint:before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
 #stage{overflow:auto;padding:14px;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior:contain}
-#svg{display:block;margin:0 auto;border-radius:16px;box-shadow:0 22px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04)}
+#svg{display:block;margin:0 auto;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom button{width:38px;height:38px;padding:0;border-radius:10px;background:rgba(20,23,27,.92);backdrop-filter:blur(6px);font-size:17px}
+.zoom button:last-child{font-size:12px}
 svg text{user-select:none;-webkit-user-select:none;pointer-events:none}
 .hole-hit{fill:transparent}
 .hole-hit:hover{fill:rgba(40,130,255,.4)}
@@ -46,13 +62,14 @@ svg text{user-select:none;-webkit-user-select:none;pointer-events:none}
 .ic{cursor:grab}
 .ic.sel .body{stroke:#6cb6ff;stroke-width:2.5}
 .tg,.pw-sw,.pbtn{cursor:pointer}
-.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;padding:4px 14px 14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.side{display:flex;flex-direction:column;gap:12px;position:sticky;top:128px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .card h3{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}
 .card h3:before{content:"";width:4px;height:15px;border-radius:2px;background:var(--red)}
 .card p{margin:0 0 8px;color:#a8acb3;font-size:13px}
-.dip{display:grid;grid-template-columns:1fr 1fr;gap:3px 18px;font:12px ui-monospace,Menlo,Consolas,monospace}
-.pin{display:flex;align-items:center;gap:6px;background:#1b1f24;border-radius:5px;padding:3px 7px}
+.dip{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font:12px ui-monospace,Menlo,Consolas,monospace}
+.pin{display:flex;align-items:center;gap:6px;background:#1b1f24;border-radius:5px;padding:3px 7px;min-width:0}
+.pin span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pin.r{flex-direction:row-reverse}
 .pin b{color:#8d939b;font-weight:600;min-width:18px;text-align:center}
 .pin i{margin-left:auto;font-style:normal;padding:0 5px;border-radius:3px;min-width:22px;text-align:center}
@@ -60,11 +77,24 @@ svg text{user-select:none;-webkit-user-select:none;pointer-events:none}
 .hi{background:#1f7a43;color:#d8ffe7}.lo{background:#3a3f46;color:#e3e5e8}.fl{color:#6b7078}
 .msg{display:flex;gap:8px;margin:0 0 6px;font-size:13px}
 .msg:before{content:"";flex:none;width:8px;height:8px;border-radius:50%;margin-top:6px}
-.msg.err:before{background:#ff5b52}.msg.warn:before{background:#f2b632}.msg.ok:before{background:var(--green)}
+.msg.err:before{background:#ff5b52}.msg.warn:before{background:var(--amber)}.msg.ok:before{background:var(--green)}
 details{margin-top:6px;color:#a8acb3;font-size:13px}
 summary{cursor:pointer}
-.foot{padding:6px 14px 22px;text-align:center;color:#6f757d;font-size:12px}
+.foot{padding:4px 14px 22px;text-align:center;color:#6f757d;font-size:12px}
 .foot b{color:#aeb3ba;font-weight:600}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s;z-index:60}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(410px,100vw);background:var(--panel);border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;z-index:61;display:flex;flex-direction:column}
+body.parts #scrim{opacity:1;visibility:visible}
+body.parts #drawer{transform:none}
+.dhead{display:flex;gap:8px;padding:14px 14px 10px}
+#psearch{flex:1;min-width:0;background:#0d0f11;border:1px solid #333a42;border-radius:9px;padding:9px 12px}
+#plist{overflow:auto;padding:0 12px 18px;flex:1;overscroll-behavior:contain}
+#plist h4{margin:16px 4px 6px;color:var(--dim);font-size:12px;font-weight:600}
+.part{display:grid;grid-template-columns:68px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;padding:9px 12px;margin-bottom:6px;border-radius:11px;background:var(--panel2)}
+.part b{background:#0a0b0d;border:1px solid #30353b;border-radius:5px;padding:6px 2px;text-align:center;font:700 13px ui-monospace,Menlo,Consolas,monospace}
+.part span{color:#c1c5cb;font-size:13px;line-height:1.3}
+.part em{font-style:normal;color:var(--dim);font-size:11.5px;white-space:nowrap}
+.none{color:var(--dim);padding:18px 6px}
 #loader{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg);transition:opacity .45s ease,visibility .45s}
 #loader.done{opacity:0;visibility:hidden}
 #loader .logo{width:64px;height:64px;border-radius:16px;padding:15px;gap:9px}
@@ -77,17 +107,21 @@ summary{cursor:pointer}
 .bar span{display:block;height:100%;width:0;background:var(--red);transition:width .3s ease}
 #loader .by{position:absolute;bottom:22px;font-size:12px;color:#6f757d}
 #loader .by b{color:#aeb3ba;font-weight:600}
-@media (max-width:900px){
-.top{padding:8px 10px;gap:8px}
-.tools{flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-.tools::-webkit-scrollbar{display:none}
-.cell{flex:none}
-.brand small{display:none}
-#hint{margin:8px 10px 0;font-size:13px}
-#stage{height:66vh;height:66dvh;padding:8px;margin:8px 0}
-.panels{padding:4px 10px 12px}
+@media (max-width:1000px){
+.layout{grid-template-columns:1fr;padding:10px}
+.side{position:static}
+.sticky{position:static}
 }
-@media (prefers-reduced-motion:reduce){.chase i{animation:none}#loader{transition:none}}
+@media (max-width:700px){
+.top{flex-wrap:wrap;padding:10px 10px 6px}
+.brand small{display:none}
+.actions{margin-left:auto}
+.chips{order:3;flex:1 1 100%;margin-left:0}
+.strip{padding:0 10px 10px}
+#stage{height:62vh;height:62dvh;padding:8px}
+#drawer{top:auto;left:0;width:100%;height:80vh;height:80dvh;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;transform:translateY(100%)}
+}
+@media (prefers-reduced-motion:reduce){.chase i{animation:none}#loader,#drawer,#scrim{transition:none}}
 </style>
 </head>
 <body>
@@ -99,27 +133,36 @@ summary{cursor:pointer}
   <p id="loadTxt">Powering up the bench</p>
   <div class="by">Developed by <b>Hamim</b></div>
 </div>
+<div class="sticky">
 <header class="top">
-  <div class="brand"><span class="logo"><i></i><i></i></span><div><b>Logic Trainer</b><small>Virtual digital lab bench · v2</small></div></div>
-  <div class="tools">
-    <div class="cell"><span class="lbl">Part</span><select id="icSel" aria-label="IC type"></select><button id="addIc" class="go">Add IC</button></div>
-    <div class="cell"><span class="lbl">Wire</span><span id="colors" class="swatches"></span></div>
-    <div class="cell"><span class="lbl">Edit</span><button id="delSel" class="danger">Delete selected</button><button id="clearW" class="danger">Clear wires</button><button id="clearAll" class="danger">Clear all</button><button id="demo">Load demo</button></div>
-    <div class="cell"><span class="lbl">Clock</span>
-      <select id="clkSel" aria-label="Clock speed">
-        <option value="0">Off</option><option value="0.5">0.5 Hz</option><option value="1">1 Hz</option><option value="2">2 Hz</option><option value="5">5 Hz</option><option value="10">10 Hz</option><option value="50">50 Hz</option>
-      </select>
-    </div>
-    <div class="cell"><span class="lbl">View</span><button id="zOut" aria-label="Zoom out">−</button><button id="zIn" aria-label="Zoom in">+</button><button id="zFit">Fit</button></div>
-  </div>
+  <div class="brand"><span class="logo"><i></i><i></i></span><div><b>Logic Trainer</b><small>Virtual digital lab bench · v3</small></div></div>
+  <div class="chips" id="chips"></div>
+  <div class="actions"><button id="partsBtn" class="go">+ Add IC</button><button id="demo">Demo</button></div>
 </header>
-<div id="hint"></div>
-<div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
-<div class="panels">
-  <div class="card" id="info"></div>
-  <div class="card" id="diag"></div>
+<div class="strip">
+  <div class="cell"><span class="lbl">Wire</span><span id="colors" class="swatches"></span></div>
+  <div class="cell"><button id="delSel" class="danger">Delete selected</button><button id="clearW" class="danger">Clear wires</button><button id="clearAll" class="danger">Clear all</button></div>
+  <div class="cell"><span class="lbl">Clock</span>
+    <select id="clkSel" aria-label="Clock speed">
+      <option value="0">Off</option><option value="0.5">0.5 Hz</option><option value="1">1 Hz</option><option value="2">2 Hz</option><option value="5">5 Hz</option><option value="10">10 Hz</option><option value="50">50 Hz</option>
+    </select>
+  </div>
 </div>
+</div>
+<main class="layout">
+  <section class="stagewrap">
+    <div id="hint"></div>
+    <div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    <div class="zoom"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zFit" aria-label="Fit to screen">Fit</button></div>
+  </section>
+  <aside class="side"><div class="card" id="info"></div><div class="card" id="diag"></div></aside>
+</main>
 <footer class="foot">Developed by <b>Hamim</b></footer>
+<div id="scrim"></div>
+<aside id="drawer" aria-label="IC library">
+  <div class="dhead"><input id="psearch" type="search" placeholder="Search: 7400, counter, decoder" aria-label="Search ICs"><button id="pclose" aria-label="Close">✕</button></div>
+  <div id="plist"></div>
+</aside>
 
 <script>
 (() => {
@@ -179,6 +222,7 @@ add('7421', G, gate('Dual 4-input AND', 14, 14, 7, nm4, F4, AND));
 add('7427', G, gate('Triple 3-input NOR', 14, 14, 7, nm3, T3, NOR));
 add('7430', G, gate('8-input NAND', 14, 14, 7, 'A B C D E F GND Y NC NC G H NC VCC', [[[1, 2, 3, 4, 5, 6, 11, 12], 8]], NAND));
 add('7432', G, gate('Quad 2-input OR', 14, 14, 7, nm2, Q2, OR));
+add('4075', G, gate('Triple 3-input OR (74HC4075)', 14, 14, 7, nm3, T3, OR));
 add('7486', G, gate('Quad 2-input XOR', 14, 14, 7, nm2, Q2, XOR));
 
 function ff(desc, np, vcc, gnd, names, pins, kind) {
@@ -385,6 +429,10 @@ const val = r => {
 /* ---------- static drawing ---------- */
 const svg = $('#svg');
 svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+const defs = el('defs', {}, svg);
+const grad = el('linearGradient', {id: 'pnl', x1: 0, y1: 0, x2: 0, y2: 1}, defs);
+el('stop', {offset: '0%', 'stop-color': '#1a1d21'}, grad);
+el('stop', {offset: '100%', 'stop-color': '#0e1012'}, grad);
 const bg0 = el('g', {}, svg), wireHitL = el('g', {}, svg), bg = el('g', {}, svg), icL = el('g', {}, svg), wireL = el('g', {}, svg), ovL = el('g', {'pointer-events': 'none'}, svg);
 const ledEls = [], swEls = [], bcd = {};
 const SEGR = {a: [5, 1, 14, 4], b: [19, 5, 4, 14], c: [19, 21, 4, 14], d: [5, 35, 14, 4], e: [1, 21, 4, 14], f: [1, 5, 4, 14], g: [5, 18, 14, 4]};
@@ -407,14 +455,18 @@ function jack(id, x, y, label, ring = '#e0463d', ly = -13) {
   if (label) txt(g, x, y + ly, label, {size: 11});
 }
 const box = (x, y, w, h, label) => {
-  el('rect', {x, y, width: w, height: h, rx: 7, fill: 'none', stroke: '#cfcdc4', 'stroke-width': 1.5}, bg);
+  el('rect', {x, y, width: w, height: h, rx: 9, fill: 'rgba(255,255,255,.028)', stroke: '#c9c7be', 'stroke-width': 1.4}, bg0);
   txt(bg, x + w / 2, y + h - 9, label, {size: 13, w: 700});
 };
 const slot = i => 244 + i * 29.2;
 
 function drawStatic() {
   el('rect', {x: 0, y: 0, width: W, height: H, rx: 16, fill: '#dd4743'}, bg0);
-  el('rect', {x: 12, y: 12, width: W - 24, height: H - 36 - 12, rx: 8, fill: '#111315'}, bg0);
+  el('rect', {x: 12, y: 12, width: W - 24, height: H - 36 - 12, rx: 8, fill: 'url(#pnl)'}, bg0);
+  [[22, 22], [W - 22, 22], [22, H - 46], [W - 22, H - 46]].forEach(([x, y]) => {
+    el('circle', {cx: x, cy: y, r: 4.5, fill: '#2b2f34', stroke: '#090a0b'}, bg0);
+    el('line', {x1: x - 3, y1: y - 1.5, x2: x + 3, y2: y + 1.5, stroke: '#0c0d0f', 'stroke-width': 1.3}, bg0);
+  });
   txt(bg, 28, H - 16, 'Digital logic trainer', {size: 13, w: 700, a: 'start', fill: '#fff'});
 
   box(26, 26, 176, 134, 'Power');
@@ -431,6 +483,7 @@ function drawStatic() {
   for (let i = 0; i < 16; i++) {
     const n = 15 - i, x = slot(i);
     txt(bg, x, 50, n, {size: 12});
+    el('circle', {cx: x, cy: 74, r: 11.5, fill: '#08090a', stroke: '#363b41', 'stroke-width': 1.5}, bg0);
     ledEls[n] = el('circle', {class: 'led', cx: x, cy: 74, r: 8}, bg);
     jack('j:led' + n, x, 112);
   }
@@ -739,6 +792,7 @@ function driverName(k) {
   const m = /^u(\d+)p(\d+)$/.exec(k), ic = ics.find(i => i.id === +m[1]);
   return `${ic.label} pin ${m[2]}`;
 }
+let issueCount = 0;
 function renderDiag() {
   const out = [], hints = [];
   if (!power) out.push(['err', 'Trainer power is off. Use the Off / On switch on the Power panel.']);
@@ -764,10 +818,18 @@ function renderDiag() {
     const f = ic.t.ins.filter(p => { const m = drv.get(ic.roots[p]); return !m || !m.size; });
     if (f.length) hints.push(`${ic.label} ${ic.t.id}: pins ${f.join(', ')} are not connected (read as HIGH).`);
   });
+  ics.filter(ic => ic.powered && (ic.t.id === '7490' || ic.t.id === '7493')).forEach(ic => {
+    const fl = p => { const m = drv.get(ic.roots[p]); return !m || !m.size; };
+    const pairs = ic.t.id === '7490' ? [[2, 3, 'R0', 'held at 0'], [6, 7, 'R9', 'held at 9']] : [[2, 3, 'R0', 'held at 0']];
+    pairs.forEach(([x, y, n, what]) => { if (fl(x) && fl(y)) out.push(['warn', `${ic.label} ${ic.t.id}: ${n} pins ${x} and ${y} are unconnected and read HIGH, so the counter is ${what}. Tie them to GND to count.`]); });
+  });
   if (!out.length) out.push(['ok', ics.length ? 'All ICs are powered. No shorts or conflicts found.' : 'No ICs placed yet.']);
   let html = '<h3>Wiring check</h3>' + out.map(([c, m]) => `<div class="msg ${c}">${m}</div>`).join('');
   if (hints.length) html += `<details><summary>${hints.length} unconnected input hint${hints.length > 1 ? 's' : ''}</summary>${hints.map(h => `<div class="msg warn">${h}</div>`).join('')}</details>`;
+  issueCount = out.filter(o => o[0] !== 'ok').length;
   setHtml('#diag', html);
+  const bad = issueCount > 0, pl = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  setHtml('#chips', `<button class="chip ${power ? 'ok' : 'off'}" id="chipPwr"><i></i>${power ? 'Power on' : 'Power off'}</button><span class="chip"><i style="background:#6cb6ff"></i>${pl(ics.length, 'IC')}</span><span class="chip"><i style="background:#b58cff"></i>${pl(wires.length, 'wire')}</span><span class="chip ${bad ? 'bad' : 'ok'}"><i></i>${bad ? pl(issueCount, 'issue') : 'No issues'}</span>`);
 }
 const hint = s => { $('#hint').textContent = s; };
 
@@ -857,25 +919,51 @@ function delSelected() {
 window.addEventListener('keydown', e => {
   if (/SELECT|INPUT/.test(e.target.tagName)) return;
   if (e.key === 'Delete' || e.key === 'Backspace') delSelected();
-  if (e.key === 'Escape') { pend = null; renderOv(); hint('Wire cancelled.'); }
+  if (e.key === 'Escape') { closeParts(); pend = null; renderOv(); hint('Wire cancelled.'); }
 });
 
 /* ---------- toolbar ---------- */
-const sel = $('#icSel');
-[...new Set(Object.values(TY).map(t => t.cat))].forEach(cat => {
-  const g = document.createElement('optgroup'); g.label = cat;
-  Object.values(TY).filter(t => t.cat === cat).forEach(t => {
-    const o = document.createElement('option'); o.value = t.id; o.textContent = `${t.id} · ${t.desc.split('.')[0].split(',')[0]}`; g.appendChild(o);
-  });
-  sel.appendChild(g);
-});
-$('#addIc').onclick = () => {
-  const type = sel.value, c = autoPlace(type);
+function placePart(type) {
+  const c = autoPlace(type);
   if (c < 0) { hint('No room on the breadboard for another IC.'); return; }
   const ic = addIc(type, c);
   selIc = ic.id; renderICs(); build(); settle(); save();
+  closeParts();
   hint(`${ic.label} (${type}) placed. Pin 1 is at column ${c + 1}, bottom row.`);
-};
+}
+const plist = $('#plist'), psearch = $('#psearch');
+function buildParts() {
+  const q = psearch.value.trim().toLowerCase();
+  plist.innerHTML = '';
+  let any = false;
+  [...new Set(Object.values(TY).map(t => t.cat))].forEach(cat => {
+    const items = Object.values(TY).filter(t => t.cat === cat && (!q || `${t.id} ${t.desc} ${cat}`.toLowerCase().includes(q)));
+    if (!items.length) return;
+    any = true;
+    const h = document.createElement('h4'); h.textContent = cat; plist.appendChild(h);
+    items.forEach(t => {
+      const b = document.createElement('button'); b.className = 'part';
+      const id = document.createElement('b'); id.textContent = t.id;
+      const d = document.createElement('span'); d.textContent = t.desc.split('. ')[0];
+      const n = document.createElement('em'); n.textContent = t.np + '-pin';
+      b.append(id, d, n);
+      b.onclick = () => placePart(t.id);
+      plist.appendChild(b);
+    });
+  });
+  if (!any) { const m = document.createElement('div'); m.className = 'none'; m.textContent = 'No chip matches that search.'; plist.appendChild(m); }
+}
+function openParts() {
+  psearch.value = ''; buildParts();
+  document.body.classList.add('parts');
+  if (window.innerWidth > 700) psearch.focus();
+}
+function closeParts() { document.body.classList.remove('parts'); }
+$('#partsBtn').onclick = openParts;
+$('#pclose').onclick = closeParts;
+$('#scrim').onclick = closeParts;
+psearch.oninput = buildParts;
+$('#chips').addEventListener('click', e => { if (e.target.closest('#chipPwr')) { power ^= 1; settle(); save(); } });
 const colorsEl = $('#colors');
 ['auto', '#e03a32', '#1c1c1c', '#2f6fe0', '#2fb55a', '#e0b92f', '#e07b2f', '#a24fd6', '#e8e8e8'].forEach(c => {
   const b = document.createElement('button');
@@ -960,6 +1048,7 @@ async function load() {
   } catch (e) { return false; }
 }
 
+window.__trainer = {TY, place: placePart, get ics() { return ics; }};
 drawStatic();
 for (let n = 0; n < 16; n++) drawSw(n);
 if (window.innerWidth < 720) setZoom(0.85); else fit();
